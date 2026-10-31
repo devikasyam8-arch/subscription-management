@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_subscription_root" name="Subscriptions" sequence="45"/>
+    <menuitem id="menu_subscription_dashboard" name="Dashboard &amp; Analytics"
+              parent="menu_subscription_root" action="action_subscription_dashboard"
+              sequence="5"/>
+    <menuitem id="menu_subscription_records" name="Subscriptions"
+              parent="menu_subscription_root" action="action_subscriptions"
+              sequence="10"/>
+    <menuitem id="menu_subscription_plans" name="Plans"
+              parent="menu_subscription_root" action="action_subscription_plans"
+              sequence="20"/>
+</odoo>

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_subscription_list" model="ir.ui.view">
+        <field name="name">subscription.subscription.list</field>
+        <field name="model">subscription.subscription</field>
+        <field name="arch" type="xml">
+            <list decoration-success="state == 'active'"
+                  decoration-muted="state in ('cancelled', 'expired')">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="plan_id"/>
+                <field name="price" widget="monetary"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="date_start"/>
+                <field name="next_invoice_date"/>
+                <field name="date_end"/>
+                <field name="user_id" widget="many2one_avatar_user"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_subscription_search" model="ir.ui.view">
+        <field name="name">subscription.subscription.search</field>
+        <field name="model">subscription.subscription</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="plan_id"/>
+                <field name="user_id"/>
+                <filter name="filter_active" string="Active"
+                        domain="[('state', '=', 'active')]"/>
+                <filter name="filter_due" string="Invoice Due"
+                        domain="[('state', '=', 'active'), ('next_invoice_date', '&lt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                <filter name="group_plan" string="Plan" context="{'group_by': 'plan_id'}"/>
+                <filter name="group_salesperson" string="Salesperson"
+                        context="{'group_by': 'user_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_subscription_form" model="ir.ui.view">
+        <field name="name">subscription.subscription.form</field>
+        <field name="model">subscription.subscription</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_activate" type="object" string="Activate"
+                            class="oe_highlight" invisible="state not in ('draft', 'paused')"/>
+                    <button name="action_pause" type="object" string="Pause"
+                            invisible="state != 'active'"/>
+                    <button name="action_cancel" type="object" string="Cancel"
+                            invisible="state not in ('draft', 'active', 'paused')"/>
+                    <button name="action_generate_invoice" type="object"
+                            string="Generate Invoice" class="oe_highlight"
+                            invisible="state != 'active'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,active,paused,cancelled,expired"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_invoices" type="object"
+                                class="oe_stat_button" icon="fa-file-text-o">
+                            <field name="invoice_count" widget="statinfo" string="Invoices"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="plan_id"/>
+                            <field name="price" widget="monetary"/>
+                            <field name="currency_id" invisible="True"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field name="date_start"/>
+                            <field name="next_invoice_date"/>
+                            <field name="date_end"/>
+                            <field name="user_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Invoices">
+                            <field name="invoice_ids" readonly="True">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="invoice_date"/>
+                                    <field name="subscription_period_start"/>
+                                    <field name="subscription_period_end"/>
+                                    <field name="amount_total" widget="monetary"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <field name="payment_state" widget="badge"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notes">
+                            <field name="notes" placeholder="Internal notes..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_subscription_graph" model="ir.ui.view">
+        <field name="name">subscription.subscription.graph</field>
+        <field name="model">subscription.subscription</field>
+        <field name="arch" type="xml">
+            <graph string="Monthly Recurring Revenue" type="bar">
+                <field name="plan_id"/>
+                <field name="currency_id"/>
+                <field name="monthly_recurring_revenue" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_subscription_pivot" model="ir.ui.view">
+        <field name="name">subscription.subscription.pivot</field>
+        <field name="model">subscription.subscription</field>
+        <field name="arch" type="xml">
+            <pivot string="Subscription Revenue">
+                <field name="plan_id" type="row"/>
+                <field name="currency_id" type="row"/>
+                <field name="state" type="col"/>
+                <field name="monthly_recurring_revenue" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="action_subscriptions" model="ir.actions.act_window">
+        <field name="name">Subscriptions</field>
+        <field name="res_model">subscription.subscription</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_subscription_search"/>
+    </record>
+
+    <record id="action_subscription_dashboard" model="ir.actions.act_window">
+        <field name="name">Dashboard &amp; Analytics</field>
+        <field name="res_model">subscription.subscription</field>
+        <field name="view_mode">graph,pivot,list,form</field>
+        <field name="view_id" ref="view_subscription_graph"/>
+        <field name="domain">[('state', '=', 'active')]</field>
+        <field name="search_view_id" ref="view_subscription_search"/>
+    </record>
+</odoo>
